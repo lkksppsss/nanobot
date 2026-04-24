@@ -1,0 +1,16 @@
+name: trigger_crawl
+description: 觸發爬蟲，指定 spider 名稱
+triggers:
+  - 觸發爬蟲
+  - 執行爬蟲
+  - 開始爬
+  - 爬新聞
+  - 跑爬蟲
+params_schema:
+  spider:
+    description: spider 名稱，例如「pts」、「cna」、「udn」
+    required: true
+steps:
+  - tool: mcp_intellinews_trigger_crawl_tool
+    params:
+      spider: "{spider}"

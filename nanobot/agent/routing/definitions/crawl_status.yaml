@@ -1,0 +1,12 @@
+name: crawl_status
+description: 查詢爬蟲執行狀態與 log
+triggers:
+  - 爬蟲狀態
+  - 爬蟲 log
+  - 看 log
+  - 爬蟲結果
+  - 最近爬了什麼
+  - 爬蟲紀錄
+steps:
+  - tool: mcp_intellinews_query_logs_tool
+    params: {}

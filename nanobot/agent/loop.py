@@ -254,6 +254,9 @@ class AgentLoop:
         self._current_iteration: int = 0
         self.commands = CommandRouter()
         register_builtin_commands(self.commands)
+        
+        from nanobot.agent.routing import IntentRouter
+        self.intent_router = IntentRouter(provider=provider, model=self.model)
 
     def _register_default_tools(self) -> None:
         """Register the default set of tools."""
@@ -811,6 +814,9 @@ class AgentLoop:
         ctx = CommandContext(msg=msg, session=session, key=key, raw=raw, loop=self)
         if result := await self.commands.dispatch(ctx):
             return result
+
+        if routed := await self.intent_router.route(msg.content, self.tools):
+            return OutboundMessage(channel=msg.channel, chat_id=msg.chat_id, content=routed)
 
         await self.consolidator.maybe_consolidate_by_tokens(
             session,

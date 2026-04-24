@@ -1,0 +1,17 @@
+name: search_news
+description: 搜尋新聞，支援關鍵字
+triggers:
+  - 搜尋新聞
+  - 找新聞
+  - 最新消息
+  - 查新聞
+  - 新聞搜尋
+params_schema:
+  keyword:
+    description: 搜尋關鍵字，例如「AI」、「台積電」
+    required: true
+steps:
+  - tool: mcp_intellinews_search_news_tool
+    params:
+      keyword: "{keyword}"
+      limit: 5
