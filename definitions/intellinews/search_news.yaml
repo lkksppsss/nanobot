@@ -1,0 +1,18 @@
+name: search_news
+category: 新聞查詢
+description: 根據關鍵字搜尋 IntelliNews 資料庫中的新聞，回傳標題、來源、發布時間
+tags: [新聞, 搜尋, 關鍵字, 查詢]
+summary_hint: |
+  請將搜尋結果整理成 Markdown 表格，欄位順序：標題（含超連結）| 來源 | 發布時間 | 摘要
+  標題格式：[標題](link)
+  發布時間只保留到分鐘：YYYY-MM-DD HH:MM
+  摘要截到 50 字即可
+params_schema:
+  keyword:
+    description: 搜尋關鍵字，例如「AI」、「台積電」；不填則回傳最新新聞
+    required: false
+steps:
+  - tool: mcp_intellinews_search_news_tool
+    params:
+      keyword: "{keyword}"
+      limit: 5

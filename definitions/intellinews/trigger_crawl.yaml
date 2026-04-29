@@ -1,0 +1,13 @@
+name: trigger_crawl
+category: 爬蟲管理
+description: 觸發單一特定 spider 步驟，需提供完整 spider 名稱（如 pts_list、pts_detail），不接受來源名稱
+tags: [爬蟲, 維運, 單步, spider, pts_list, pts_detail, cna_rss, cna_detail, udn_list, udn_detail]
+params_schema:
+  spider:
+    description: 完整 spider 名稱，如 pts_list、pts_detail、cna_rss、cna_detail、udn_list、udn_detail（不可只填來源名稱如 pts）
+    required: true
+    enum: [pts_list, pts_detail, cna_rss, cna_detail, udn_list, udn_detail]
+steps:
+  - tool: mcp_intellinews_trigger_crawl_tool
+    params:
+      spider: "{spider}"

@@ -255,8 +255,19 @@ class AgentLoop:
         self.commands = CommandRouter()
         register_builtin_commands(self.commands)
         
-        from nanobot.agent.routing import IntentRouter
-        self.intent_router = IntentRouter(provider=provider, model=self.model)
+        import logging
+        from runbook_engine import RunbookEngine
+        from runbook_engine.config import EngineConfig
+        from runbook_engine.core.embedder import OllamaEmbedder
+        _cfg_path = os.path.join(os.path.dirname(__file__), "..", "..", "runbook_engine.config.yaml")
+        _cfg = EngineConfig.load(_cfg_path)
+        self.runbook_engine = RunbookEngine(
+            provider=provider,
+            model=self.model,
+            config=_cfg,
+            embedder=OllamaEmbedder(),
+        )
+        logging.basicConfig(level=logging.WARNING, format="%(name)s %(levelname)s %(message)s")
 
     def _register_default_tools(self) -> None:
         """Register the default set of tools."""
@@ -520,6 +531,7 @@ class AgentLoop:
         """Run the agent loop, dispatching messages as tasks to stay responsive to /stop."""
         self._running = True
         await self._connect_mcp()
+        await self.runbook_engine.warm_up()
         logger.info("Agent loop started")
 
         while self._running:
@@ -815,7 +827,22 @@ class AgentLoop:
         if result := await self.commands.dispatch(ctx):
             return result
 
-        if routed := await self.intent_router.route(msg.content, self.tools):
+        if routed := await self.runbook_engine.route(msg.content, self.tools, session_key=key):
+            return OutboundMessage(channel=msg.channel, chat_id=msg.chat_id, content=routed)
+
+        if not await self.runbook_engine.should_use_tools(msg.content):
+            response = await self.provider.chat(
+                messages=[{"role": "user", "content": msg.content}],
+                model=self.model,
+                max_tokens=1024,
+                temperature=0.7,
+            )
+            return OutboundMessage(
+                channel=msg.channel, chat_id=msg.chat_id,
+                content=response.content or "",
+            )
+
+        if routed := await self.runbook_engine.force_route(msg.content, self.tools, session_key=key):
             return OutboundMessage(channel=msg.channel, chat_id=msg.chat_id, content=routed)
 
         await self.consolidator.maybe_consolidate_by_tokens(

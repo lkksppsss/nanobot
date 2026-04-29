@@ -1,0 +1,10 @@
+engine:
+  threshold: 0.40
+  top_n: 3
+  index_cache: ~/.cache/runbook_engine_index.json
+
+domains:
+  intellinews:
+    display_name: IntelliNews 新聞系統
+    description: 新聞搜尋、爬蟲管理、系統 log 查詢、觸發爬蟲
+    definitions_dir: ./definitions/intellinews

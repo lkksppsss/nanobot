@@ -1,0 +1,12 @@
+name: set_domain
+category: __system__
+description: 切換目前操作的領域或系統，例如切換到 IntelliNews、電商系統等
+tags: [切換, 領域, 模式, 系統, 切到, 換到]
+params_schema:
+  domain:
+    description: 要切換的領域 key，例如 intellinews、ecommerce
+    required: true
+steps:
+  - builtin: set_domain
+    params:
+      domain: "{domain}"

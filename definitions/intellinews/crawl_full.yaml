@@ -1,0 +1,16 @@
+name: crawl_full
+category: 爬蟲管理
+description: 觸發新聞來源的完整爬蟲流程，只需提供來源名稱（pts/cna/udn），系統自動執行所有步驟
+tags: [爬蟲, 完整, 維運, 來源]
+params_schema:
+  source:
+    description: 新聞來源，選項：pts（公視）、cna（中央社）、udn（聯合報）
+    required: true
+    map:
+      pts: [pts_list, pts_detail]
+      cna: [cna_rss, cna_detail]
+      udn: [udn_list, udn_detail]
+steps:
+  - tool: mcp_intellinews_trigger_crawl_tool
+    params:
+      spider: "{source}"

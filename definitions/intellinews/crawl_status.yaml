@@ -1,0 +1,58 @@
+name: crawl_status
+category: 爬蟲管理
+description: 查詢爬蟲執行的完整鏈路，包含 FastAPI 觸發、scrapy 啟動、gRPC 入庫、Laravel 通知各階段狀態
+tags: [爬蟲, 狀態, log, 維運, 鏈路, 完整, 紀錄, 查詢]
+params_schema:
+  crawl_id:
+    description: 指定 crawl_id 查詢單次爬蟲完整鏈路；不填則顯示最近 24 小時所有爬蟲紀錄
+    required: false
+steps:
+  - tool: mcp_intellinews_query_logs_tool
+    params:
+      service: "fastapi"
+      keyword: "Crawl triggered"
+      hours: 24
+      crawl_id: "{crawl_id}"
+      size: 10
+      raw: true
+    save_as: fastapi_raw
+
+  - llm: extract
+    input: "{fastapi_raw}"
+    prompt: |
+      以下是 JSON，logs 陣列中每筆都是一次爬蟲觸發紀錄。
+      請從每筆 log 提取 crawl_id、spider、timestamp 三個欄位，timestamp 只保留 HH:MM:SS 部分。
+      只回傳 JSON 陣列，格式：[{"crawl_id": 22, "spider": "pts_list", "time": "06:48:33"}]
+      不要其他文字。
+    save_as: crawl_list
+
+  - tool: mcp_intellinews_query_logs_tool
+    params:
+      service: "grpc_server"
+      hours: 24
+      crawl_id: "{crawl_id}"
+      agg_by: "crawl_id"
+      raw: true
+    save_as: article_counts
+
+  - tool: mcp_intellinews_query_logs_tool
+    params:
+      service: "laravel"
+      keyword: "Crawler finished"
+      hours: 24
+      crawl_id: "{crawl_id}"
+      size: 10
+      raw: true
+    save_as: laravel_raw
+
+  - llm: extract
+    input: "{laravel_raw}"
+    prompt: |
+      以下是 JSON，請列出 logs 陣列中所有出現過的 crawl_id 值。
+      只回傳 JSON 陣列，格式：[22, 23, 24]
+      不要其他文字。
+    save_as: finished_ids
+
+  - llm: summarize
+    input: "爬蟲清單：{crawl_list}\n入庫統計：{article_counts}\n完成確認：{finished_ids}"
+    prompt: 請用繁體中文整理以上爬蟲執行資訊，依每次爬蟲列出 spider 名稱、觸發時間、入庫筆數、是否完成。
